@@ -1,0 +1,28 @@
+{
+    "check-coverage": true,
+    "lines": 80,
+    "watermarks": {
+        "lines": [80, 90],
+        "functions": [80, 90],
+        "branches": [80, 90],
+        "statements": [80, 90]
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "**/test/**"
+    ],
+    "extension": [
+        ".ts"
+    ],
+    "require": [
+        "ts-node/register",
+        "tsconfig-paths/register"
+    ],
+    "reporter": [],
+    "exit-on-error": true,
+    "instrument": true,
+    "all": false,
+    "cache": false
+}
