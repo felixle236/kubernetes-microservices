@@ -10,8 +10,8 @@ https://github.com/dennyzhang/cheatsheet-kubernetes-A4
 https://kubernetes.io/vi/docs/reference/kubectl/cheatsheet
 
 ## Architecture Diagrams
-![Microservices Architecture](https://github.com/felixle236/kubernetes-microservices/diagrams/microservices-architecture.jpg)
-![Microservices Communication](https://github.com/felixle236/kubernetes-microservices/diagrams/microservices-communication.jpg)
+![Microservices Architecture](https://github.com/felixle236/kubernetes-microservices/blob/master/diagrams/microservices-architecture.jpg)
+![Microservices Communication](https://github.com/felixle236/kubernetes-microservices/blob/master/diagrams/microservices-communication.jpg)
 
 ## Get Started
 ### 1. Google Kubernetes Engine
