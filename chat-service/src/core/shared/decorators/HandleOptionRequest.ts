@@ -13,6 +13,8 @@ export function HandleOptionRequest(): Function {
         value: actionProperties => {
             const reqExt = actionProperties.request as IRequest;
             const handleOption = new HandleOption();
+            handleOption.req = reqExt;
+            handleOption.res = actionProperties.response;
             handleOption.trace = reqExt.trace;
             handleOption.userAuth = reqExt.userAuth;
             return handleOption;

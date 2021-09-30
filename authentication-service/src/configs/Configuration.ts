@@ -1,13 +1,27 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { convertStringToBoolean } from '@utils/converter';
-import dotenv from 'dotenv';
 import { Environment, LogProvider } from './Enums';
-dotenv.config();
 
 // SYSTEM ENVIRONMENT
 
 const keyEnv = Object.keys(Environment).find(key => Environment[key] === process.env.NODE_ENV);
 export const ENVIRONMENT: Environment = keyEnv ? Environment[keyEnv] : Environment.Local;
+let env = '';
+switch (ENVIRONMENT) {
+case Environment.Development:
+    env = 'dev';
+    break;
+case Environment.Staging:
+    env = 'stag';
+    break;
+case Environment.Production:
+    env = 'prod';
+    break;
+default:
+    env = 'local';
+    break;
+}
+export const ENV = env;
 
 export const PROJECT_ID: string = process.env.PROJECT_ID ?? '';
 export const PROJECT_NAME: string = process.env.PROJECT_NAME ?? '';

@@ -1,3 +1,5 @@
+import { MessageError } from '@shared/exceptions/message/MessageError';
+import { SystemError } from '@shared/exceptions/SystemError';
 import { UserExchange } from '@shared/queue/consume/exchanges/UserExchange';
 import { ICreateUserPayload } from '@shared/queue/consume/payloads/user/ICreateUserPayload';
 import { IDeleteUserPayload } from '@shared/queue/consume/payloads/user/IDeleteUserPayload';
@@ -85,6 +87,8 @@ export default class UserConsumer {
 
                 await this._updateUserAvatarCommandHandler.handle(param, handleOption);
             }
+            else
+                throw new SystemError(MessageError.PARAM_NOT_FOUND, 'routing key');
         });
     }
 }

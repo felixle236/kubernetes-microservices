@@ -1,3 +1,5 @@
+import { MessageError } from '@shared/exceptions/message/MessageError';
+import { SystemError } from '@shared/exceptions/SystemError';
 import { UserExchange } from '@shared/queue/consume/exchanges/UserExchange';
 import { IResendUserActivation } from '@shared/queue/consume/payloads/user/IResendUserActivation';
 import { ISendUserActivation } from '@shared/queue/consume/payloads/user/ISendUserActivation';
@@ -47,6 +49,8 @@ export default class UserConsumer {
 
                 await this._resendUserActivationCommandHandler.handle(param, handleOption);
             }
+            else
+                throw new SystemError(MessageError.PARAM_NOT_FOUND, 'routing key');
         });
     }
 }

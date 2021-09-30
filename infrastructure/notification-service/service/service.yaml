@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  labels:
+    app: notification
+    tier: backend
+spec:
+  selector:
+    app: notification
+    tier: backend
+  ports:
+    - name: notification-port
+      port: 80
+      targetPort: 3000
+      protocol: TCP

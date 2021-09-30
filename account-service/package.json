@@ -5,7 +5,6 @@
     "license": "SEE LICENSE IN LICENSE",
     "readmeFilename": "README.md",
     "scripts": {
-        "postinstall": "husky install",
         "generate:module": "node ./module-generator/generate.js",
         "generate:usecase": "node ./module-generator/generate-usecase.js",
         "typeorm:cli": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -f src/configs/DbConfig",
@@ -18,8 +17,8 @@
         "test": "npm run test:unit && npm run test:report",
         "test:unit": "nyc mocha --exit ./src/**/*.spec.ts",
         "test:report": "nyc report --reporter=html --reporter=text",
-        "dev": "NODE_ENV=local nodemon --exec ts-node -r tsconfig-paths/register src/app.ts",
-        "start": "NODE_ENV=production node ./dist/app.js"
+        "dev": "nodemon --exec ts-node -r tsconfig-paths/register src/app.ts",
+        "start": "node ./dist/app.js"
     },
     "author": {
         "name": "Felix Lee",

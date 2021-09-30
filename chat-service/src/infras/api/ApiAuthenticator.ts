@@ -12,10 +12,11 @@ import Container from 'typedi';
 export class ApiAuthenticator {
     static authorizationChecker = async (action: Action): Promise<boolean> => {
         const reqExt = action.request as IRequest;
-        if (!reqExt.headers.authorization)
-            throw new UnauthorizedError();
 
         if (ENVIRONMENT === Environment.Local) {
+            if (!reqExt.headers.authorization)
+                throw new UnauthorizedError();
+
             const parts = (reqExt.headers.authorization as string || '').split(' ');
             const token = parts.length === 2 && parts[0] === 'Bearer' ? parts[1] : '';
             if (!token)
@@ -26,18 +27,14 @@ export class ApiAuthenticator {
 
             const authenticationService: IAuthenticationService = Container.get('authentication.service');
             const data = await authenticationService.verifyUserAuth(token, handleOption);
-            reqExt.headers.authorization = JSON.stringify(data);
+            reqExt.headers['x-user-id'] = data.userId;
+            reqExt.headers['x-role-id'] = data.roleId;
         }
 
-        try {
-            const data = JSON.parse(reqExt.headers.authorization);
-            if (!data.userId || !data.roleId)
-                throw new UnauthorizedError(MessageError.PARAM_INVALID, 'authentication');
-            reqExt.userAuth = new UserAuthenticated(data.userId, data.roleId);
-        }
-        catch {
-            throw new UnauthorizedError(MessageError.DATA_INVALID);
-        }
+        if (!reqExt.headers['x-user-id'] || !reqExt.headers['x-role-id'])
+            throw new UnauthorizedError(MessageError.PARAM_INVALID, 'authentication');
+
+        reqExt.userAuth = new UserAuthenticated(reqExt.headers['x-user-id'] as string, reqExt.headers['x-role-id'] as string);
         return true;
     }
 

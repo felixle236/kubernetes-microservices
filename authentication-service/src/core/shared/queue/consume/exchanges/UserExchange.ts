@@ -1,17 +1,21 @@
+import { ENV } from '@configs/Configuration';
+
+const prefix = ENV + '.';
+
 export class UserExchange {
     // The domain in DDD concept.
-    static EXCHANGE = 'user';
+    static EXCHANGE = prefix + 'user';
 
     // The jobs need to process by other microservices that they contained into the queues.
     static QUEUES = {
-        AUTH_QUEUE_SYNC_USER: 'auth.queue.sync-user'
+        AUTH_QUEUE_SYNC_USER: prefix + 'auth.queue.sync-user'
     };
 
     // Define the keys that their name are the same an action, an usecase may have one or many action.
     static KEYS = {
-        USER_EVENT_CREATED: 'user.event.created',
-        USER_EVENT_UPDATED: 'user.event.updated',
-        USER_EVENT_DELETED: 'user.event.deleted',
-        USER_EVENT_STATUS_UPDATED: 'user.event.status-updated'
+        USER_EVENT_CREATED: prefix + 'user.event.created',
+        USER_EVENT_UPDATED: prefix + 'user.event.updated',
+        USER_EVENT_DELETED: prefix + 'user.event.deleted',
+        USER_EVENT_STATUS_UPDATED: prefix + 'user.event.status-updated'
     };
 }

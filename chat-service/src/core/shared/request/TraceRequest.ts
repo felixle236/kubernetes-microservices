@@ -9,7 +9,9 @@ export class TraceRequest {
     id: string;
 
     getFromHttpHeader(headers: IncomingHttpHeaders): void {
-        this.id = headers[TraceRequest.HTTP_HEADER_KEY] as string || randomUUID();
+        if (!headers[TraceRequest.HTTP_HEADER_KEY])
+            headers[TraceRequest.HTTP_HEADER_KEY] = randomUUID();
+        this.id = headers[TraceRequest.HTTP_HEADER_KEY] as string;
     }
 
     setToHttpHeader(headers: IncomingHttpHeaders): void {
@@ -17,7 +19,9 @@ export class TraceRequest {
     }
 
     getFromMQHeader(headers: MessagePropertyHeaders): void {
-        this.id = headers[TraceRequest.MQ_HEADER_KEY] || randomUUID();
+        if (!headers[TraceRequest.MQ_HEADER_KEY])
+            headers[TraceRequest.MQ_HEADER_KEY] = randomUUID();
+        this.id = headers[TraceRequest.MQ_HEADER_KEY];
     }
 
     setToMQHeader(headers: MessagePropertyHeaders): void {

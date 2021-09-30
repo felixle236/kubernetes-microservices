@@ -75,13 +75,6 @@ async function initData(queryRunner: QueryRunner): Promise<void> {
     };
     queueContext.publish(UserExchange.EXCHANGE, UserExchange.KEYS.USER_EVENT_CREATED, userPayload, {}, handleOption);
 
-    // const userAuthPayload: IAuthQueueCreateUserAuthPayload = {
-    //     id: manager.id,
-    //     email: manager.email,
-    //     password: 'Nodecore@2'
-    // };
-    // queueContext.publish(UserExchange.EXCHANGE, UserExchange.KEYS.USER_CMD_CREATE_USER_AUTH, userAuthPayload, {}, handleOption);
-
     logService.info('\x1b[32m Create user "Super Admin" successfully. \x1b[0m');
 }
 

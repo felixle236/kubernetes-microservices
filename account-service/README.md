@@ -63,7 +63,7 @@ Implementing advanced architectures like clean architecture and domain driven de
 
 ## Required
 
-- NodeJS version >= `14.x.x`, current version: NodeJS `v14.17.5` and NPM `v6.14.14` (We can install global `n` package to switch NodeJS versions easier).
+- NodeJS version >= `14.17.x`, current version: NodeJS `v14.17.5` and NPM `v6.14.14` (We can install global `n` package to switch NodeJS versions easier).
 - Knowledge of Typescript, ES6, TypeORM, PostgreSQL.
 
 ## Document Related
@@ -185,8 +185,8 @@ npm run migration:down ------------------------// Revert migration for updating 
 npm run lint
 npm run build ---------------------------------// Build source before start with production environment.
 npm test --------------------------------------// Start unit test and coverage report.
-npm run dev -----------------------------------// Start with local environment.
-npm start -------------------------------------// Start with production environment, we can change variable for each environment as development, test, staging,....
+npm run dev -----------------------------------// Start with local environment (NODE_ENV into .env file).
+npm start -------------------------------------// Start with production environment (NODE_ENV into .env file), we can change variable for each environment as development, test, staging,....
 ```
 
 ## Grunt Commands
@@ -218,7 +218,7 @@ Run the migration for updating database structure (need to create database befor
 npm run migration:up
 ```
 
-Run the below command for starting with development mode (or debug by visual code), NODE_ENV will be `local`:
+Run the below command for starting with development mode (or debug by visual code), NODE_ENV will be `local` (NODE_ENV into .env file):
 
 ```
 npm run dev

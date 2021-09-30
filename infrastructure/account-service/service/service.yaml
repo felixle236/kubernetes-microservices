@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: account-service
+  labels:
+    app: account
+    tier: backend
+spec:
+  selector:
+    app: account
+    tier: backend
+  ports:
+    - name: account-port
+      port: 80
+      targetPort: 3000
+      protocol: TCP

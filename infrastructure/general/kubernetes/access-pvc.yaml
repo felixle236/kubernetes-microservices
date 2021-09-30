@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: access-pv
+spec:
+  # storageClassName: "ssd"
+  capacity:
+    storage: 10G
+  accessModes:
+    - ReadWriteOnce
+  claimRef:
+    name: access-pvc
+  gcePersistentDisk:
+    pdName: gke-cs-cluster-dev-336-pvc-6f9b7392-e993-444f-b735-00eb1ee9ace2
+    fsType: ext4
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: access-pvc
+spec:
+  # storageClassName: "ssd"
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10G
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: access-pvc-pod
+  labels:
+    app: access-pvc
+    tier: database
+spec:
+  containers:
+    - name: access-pvc-container
+      image: alpine:latest
+      command: ['sleep', 'infinity']
+      volumeMounts:
+      - name: database-pvc
+        mountPath: /bitnami/postgresql
+      resources:
+        limits: {}
+        requests: {}
+  volumes:
+  - name: database-pvc
+    persistentVolumeClaim:
+      claimName: access-pvc

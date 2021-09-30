@@ -1,12 +1,14 @@
 import path from 'path';
+import dotenv from 'dotenv';
 import moduleAlias from 'module-alias';
+dotenv.config();
 /* Note: Do not import/require any file has used the path alias before execute 'addAliases' function below. */
 
 /**
  * Map path for alias.
  */
 function mapPathAlias(aliasPath: string): string {
-    const dir = process.env.NODE_ENV === 'local' ? 'src' : 'dist';
+    const dir = !process.env.NODE_ENV || process.env.NODE_ENV === 'local' ? 'src' : 'dist';
     return path.join(process.cwd(), `${dir}/${aliasPath}`);
 }
 

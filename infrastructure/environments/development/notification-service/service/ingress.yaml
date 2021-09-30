@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: notification-ingress
+  namespace: dev
+  labels:
+    app: notification
+    tier: gateway
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/auth-url: http://authentication-service.dev.svc.cluster.local/api/v1/auths
+    nginx.ingress.kubernetes.io/auth-method: GET
+    nginx.ingress.kubernetes.io/auth-response-headers: X-Trace, X-User-Id, X-Role-Id
+    nginx.ingress.kubernetes.io/auth-cache-key: $remote_user$http_authorization
+    nginx.ingress.kubernetes.io/auth-cache-duration: 200 202 5m, 401 5s
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: 30s
+    nginx.ingress.kubernetes.io/proxy-read-timeout: 20s
+    nginx.ingress.kubernetes.io/client-max-body-size: 2m
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 2m
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/limit-rps: "5" # 5 request/second/ip
+    # nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  rules:
+  - host: notification-dev.review-site.xyz
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: notification-service
+            port:
+              number: 80

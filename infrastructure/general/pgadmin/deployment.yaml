@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin-deployment
+  labels:
+    app: pgadmin
+    tier: database
+spec:
+  selector:
+    matchLabels:
+      app: pgadmin
+      tier: database
+  template:
+    metadata:
+      labels:
+        app: pgadmin
+        tier: database
+    spec:
+      containers:
+        - name: pgadmin-container
+          image: dpage/pgadmin4:5.7
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits: {}
+              # cpu: 250m
+              # memory: 300Mi
+            requests: {}
+              # cpu: 200m
+              # memory: 150Mi
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          env:
+            - name: PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION
+              value: "False"
+            - name: PGADMIN_DEFAULT_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: pgadmin-secret
+                  key: pgadmin_email
+            - name: PGADMIN_DEFAULT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgadmin-secret
+                  key: pgadmin_password
+
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /misc/ping
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 15
+
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /misc/ping
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 15
+
+          volumeMounts:
+            - mountPath: /var/lib/pgadmin
+              name: pgadmin-data
+              readOnly: false
+
+      securityContext:
+        fsGroup: 5050
+        runAsGroup: 5050
+        runAsUser: 5050
+
+      volumes:
+        - name: pgadmin-data
+          persistentVolumeClaim:
+            claimName: pgadmin-pvc

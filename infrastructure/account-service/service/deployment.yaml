@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account-deployment
+  labels:
+    app: account
+    tier: backend
+spec:
+  selector:
+    matchLabels:
+      app: account
+      tier: backend
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: account
+        tier: backend
+    spec:
+      imagePullSecrets:
+        - name: docker-registry-secret
+      initContainers:
+        - name: account-run-migration
+          image: felixle236/k8s-micro-account-service
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', './node_modules/typeorm/cli.js -f dist/configs/DbConfig migration:run']
+          volumeMounts:
+            - mountPath: /usr/app/.env
+              subPath: .env
+              name: account-volume
+              readOnly: true
+      containers:
+        - name: account-container
+          image: felixle236/k8s-micro-account-service
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits: {}
+              # cpu: 400m
+              # memory: 600Mi
+            requests: {}
+              # cpu: 300m
+              # memory: 400Mi
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+            - containerPort: 5000
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /usr/app/.env
+              subPath: .env
+              name: account-volume
+              readOnly: true
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 3
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 3
+      volumes:
+        - name: account-volume
+          secret:
+            secretName: account-secret
+            items:
+              - key: .env
+                path: .env

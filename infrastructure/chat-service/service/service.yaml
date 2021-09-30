@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-service
+  labels:
+    app: chat
+    tier: backend
+spec:
+  selector:
+    app: chat
+    tier: backend
+  ports:
+    - name: chat-port
+      port: 80
+      targetPort: 3000
+      protocol: TCP

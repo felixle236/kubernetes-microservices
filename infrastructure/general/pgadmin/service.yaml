@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgadmin-service
+  labels:
+    app: pgadmin
+    tier: database
+spec:
+  selector:
+    app: pgadmin
+    tier: database
+  ports:
+    - name: pgadmin-port
+      port: 80
+      protocol: TCP

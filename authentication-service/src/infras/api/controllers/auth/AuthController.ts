@@ -14,16 +14,15 @@ import { ResetPasswordByEmailCommandOutput } from '@usecases/auth/auth/commands/
 import { UpdateMyPasswordByEmailCommandHandler } from '@usecases/auth/auth/commands/update-my-password-by-email/UpdateMyPasswordByEmailCommandHandler';
 import { UpdateMyPasswordByEmailCommandInput } from '@usecases/auth/auth/commands/update-my-password-by-email/UpdateMyPasswordByEmailCommandInput';
 import { UpdateMyPasswordByEmailCommandOutput } from '@usecases/auth/auth/commands/update-my-password-by-email/UpdateMyPasswordByEmailCommandOutput';
-import { GetUserAuthByJwtQueryHandler } from '@usecases/auth/auth/queries/get-user-auth-by-jwt/GetUserAuthByJwtQueryHandler';
-import { GetUserAuthByJwtQueryInput } from '@usecases/auth/auth/queries/get-user-auth-by-jwt/GetUserAuthByJwtQueryInput';
-import { GetUserAuthByJwtQueryOutput } from '@usecases/auth/auth/queries/get-user-auth-by-jwt/GetUserAuthByJwtQueryOutput';
+import { CheckUserAuthPermissionQueryHandler } from '@usecases/auth/auth/queries/check-user-auth-permission/CheckUserAuthPermissionQueryHandler';
+import { CheckUserAuthPermissionQueryOutput } from '@usecases/auth/auth/queries/check-user-auth-permission/CheckUserAuthPermissionQueryOutput';
 import { LoginByEmailQueryHandler } from '@usecases/auth/auth/queries/login-by-email/LoginByEmailQueryHandler';
 import { LoginByEmailQueryInput } from '@usecases/auth/auth/queries/login-by-email/LoginByEmailQueryInput';
 import { LoginByEmailQueryOutput } from '@usecases/auth/auth/queries/login-by-email/LoginByEmailQueryOutput';
 import { ValidateForgotKeyForEmailCommandHandler } from '@usecases/auth/auth/queries/validate-forgot-key-for-email/ValidateForgotKeyForEmailCommandHandler';
 import { ValidateForgotKeyForEmailCommandInput } from '@usecases/auth/auth/queries/validate-forgot-key-for-email/ValidateForgotKeyForEmailCommandInput';
 import { ValidateForgotKeyForEmailCommandOutput } from '@usecases/auth/auth/queries/validate-forgot-key-for-email/ValidateForgotKeyForEmailCommandOutput';
-import { Authorized, Body, CurrentUser, Get, HeaderParam, JsonController, Patch, Post, QueryParams, UseBefore } from 'routing-controllers';
+import { Authorized, Body, CurrentUser, Get, JsonController, Patch, Post, UseBefore } from 'routing-controllers';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
 import { Service } from 'typedi';
 
@@ -31,7 +30,7 @@ import { Service } from 'typedi';
 @JsonController('/v1/auths')
 export class AuthController {
     constructor(
-        private readonly _getUserAuthByJwtQueryHandler: GetUserAuthByJwtQueryHandler,
+        private readonly _checkUserAuthPermissionQueryHandler: CheckUserAuthPermissionQueryHandler,
         private readonly _createAuthByEmailCommandHandler: CreateAuthByEmailCommandHandler,
         private readonly _loginByEmailQueryHandler: LoginByEmailQueryHandler,
         private readonly _forgotPasswordByEmailCommandHandler: ForgotPasswordByEmailCommandHandler,
@@ -42,17 +41,12 @@ export class AuthController {
 
     @Get('/')
     @OpenAPI({
-        summary: 'Get user authenticated by access token into header param or query param',
+        summary: 'Check user authenticated with permission',
         security: []
     })
-    @ResponseSchema(GetUserAuthByJwtQueryOutput)
-    async getUserAuth(@QueryParams() param: GetUserAuthByJwtQueryInput, @HeaderParam('authorization') authorization: string, @HandleOptionRequest() handleOption: HandleOption): Promise<GetUserAuthByJwtQueryOutput> {
-        if (authorization) {
-            const parts = authorization.split(' ');
-            const token = parts.length === 2 && parts[0] === 'Bearer' ? parts[1] : '';
-            param.token = token;
-        }
-        return await this._getUserAuthByJwtQueryHandler.handle(param, handleOption);
+    @ResponseSchema(CheckUserAuthPermissionQueryOutput)
+    async checkUserAuthPermission(@HandleOptionRequest() handleOption: HandleOption): Promise<CheckUserAuthPermissionQueryOutput> {
+        return await this._checkUserAuthPermissionQueryHandler.handle(handleOption);
     }
 
     @Post('/')

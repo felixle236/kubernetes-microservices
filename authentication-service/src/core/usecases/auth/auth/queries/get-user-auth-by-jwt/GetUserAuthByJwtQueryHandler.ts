@@ -4,25 +4,25 @@ import { MessageError } from '@shared/exceptions/message/MessageError';
 import { UnauthorizedError } from '@shared/exceptions/UnauthorizedError';
 import { HandleOption } from '@shared/usecase/HandleOption';
 import { QueryHandler } from '@shared/usecase/QueryHandler';
-import { validateDataInput } from '@utils/validator';
 import { Inject, Service } from 'typedi';
-import { GetUserAuthByJwtQueryInput } from './GetUserAuthByJwtQueryInput';
 import { GetUserAuthByJwtQueryOutput } from './GetUserAuthByJwtQueryOutput';
 
 @Service()
-export class GetUserAuthByJwtQueryHandler extends QueryHandler<GetUserAuthByJwtQueryInput, GetUserAuthByJwtQueryOutput> {
+export class GetUserAuthByJwtQueryHandler extends QueryHandler<HandleOption, GetUserAuthByJwtQueryOutput> {
     @Inject('auth_jwt.service')
     private readonly _authJwtService: IAuthJwtService;
 
     @Inject('log.service')
     private readonly _logService: ILogService;
 
-    async handle(param: GetUserAuthByJwtQueryInput, handleOption: HandleOption): Promise<GetUserAuthByJwtQueryOutput> {
-        await validateDataInput(param);
+    async handle(handleOption: HandleOption): Promise<GetUserAuthByJwtQueryOutput> {
+        const token = this._authJwtService.getTokenFromHeader(handleOption.req.headers);
+        if (!token)
+            throw new UnauthorizedError(MessageError.PARAM_REQUIRED, 'token');
 
         let payload;
         try {
-            payload = this._authJwtService.verify(param.token);
+            payload = this._authJwtService.verify(token);
         }
         catch (error: any) {
             this._logService.error('Verify token', error, handleOption.trace.id);

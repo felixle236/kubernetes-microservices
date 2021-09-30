@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: rabbitmq-ingress
+  namespace: stag
+  labels:
+    app: rabbitmq
+    tier: gateway
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/client-max-body-size: 256m
+    nginx.ingress.kubernetes.io/proxy-body-size: 256m
+    nginx.org/client-max-body-size: 256m
+    nginx.org/proxy-connect-timeout: 30s
+    nginx.org/proxy-read-timeout: 20s
+spec:
+  rules:
+  - host: rabbitmq-stag.domain.com
+    http:
+      paths:
+      - backend:
+          serviceName: rabbitmq-service
+          servicePort: 80

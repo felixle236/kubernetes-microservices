@@ -9,7 +9,6 @@ import { AxiosResponse } from 'axios';
 export function handleAxiosResponseData<T>(res: AxiosResponse<T>): T {
     if (!res.data)
         throw new SystemError(MessageError.SOMETHING_WRONG);
-
     return res.data;
 }
 

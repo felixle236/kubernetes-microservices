@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: chat-ingress
+  namespace: prod
+  labels:
+    app: chat
+    tier: gateway
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/auth-url: http://authentication-service.prod.svc.cluster.local/api/v1/auths
+    nginx.ingress.kubernetes.io/auth-signin: https://app.domain.com/login
+    nginx.ingress.kubernetes.io/auth-method: POST
+    nginx.ingress.kubernetes.io/auth-response-headers: Authorization, X-Trace, X-User-Id, X-Role-Id
+    nginx.ingress.kubernetes.io/auth-cache-key: $remote_user$http_authorization
+    nginx.ingress.kubernetes.io/auth-cache-duration: 200 202 5m, 401 5s
+    nginx.org/client-max-body-size: 1m
+    nginx.ingress.kubernetes.io/client-max-body-size: 1m
+    nginx.ingress.kubernetes.io/limit-rps: "5" # 5 request/second
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      client_body_timeout 20s;
+      client_header_timeout 5s;
+      proxy_set_header HOST $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $remote_addr;
+      proxy_set_header X-Forwarded-Host $server_name;
+
+spec:
+  rules:
+  - host: chat.domain.com
+    http:
+      paths:
+      - backend:
+          serviceName: chat-service
+          servicePort: 80
+      - path: /docs
+        backend:
+          serviceName: chat-service
+          servicePort: 80
