@@ -1,17 +1,16 @@
-import { AWS_ACCESS_KEY, AWS_REGION, AWS_SECRET_KEY, LOG_PROVIDER, PROJECT_ID } from '@configs/Configuration';
-import { LogProvider } from '@configs/Enums';
-import { ILogService } from '@gateways/services/ILogService';
 import { LoggingWinston } from '@google-cloud/logging-winston';
-import { IRequest } from '@shared/request/IRequest';
-import { TraceRequest } from '@shared/request/TraceRequest';
-import { isLiteralObject } from '@utils/validator';
+import { ILogService } from 'application/interfaces/services/ILogService';
+import { LOG_PROVIDER, PROJECT_ID } from 'config/Configuration';
 import { Handler, NextFunction, Request, Response } from 'express';
 import expressWinston from 'express-winston';
+import { TraceRequest } from 'shared/request/TraceRequest';
+import { LogProvider } from 'shared/types/Environment';
+import { InjectService } from 'shared/types/Injection';
 import { Service } from 'typedi';
+import { isLiteralObject } from 'utils/Validator';
 import { createLogger, format, Logger, transports } from 'winston';
-import WinstonCloudWatch from 'winston-cloudwatch';
 
-@Service('log.service')
+@Service(InjectService.Log)
 export class LogService implements ILogService {
     private readonly _logger: Logger;
 
@@ -19,95 +18,76 @@ export class LogService implements ILogService {
         const { combine, colorize, simple } = format;
 
         switch (LOG_PROVIDER) {
-        case LogProvider.AwsWinston:
-            this._logger = createLogger({
-                level: 'debug',
-                transports: [
-                    new WinstonCloudWatch({
-                        name: PROJECT_ID,
-                        logGroupName: PROJECT_ID,
-                        logStreamName: PROJECT_ID,
-                        awsRegion: AWS_REGION,
-                        awsAccessKeyId: AWS_ACCESS_KEY,
-                        awsSecretKey: AWS_SECRET_KEY,
-                        messageFormatter: ({ level, message, ...meta }) => {
-                            return level + ': ' + message + (meta && Object.keys(meta).length ? ' ' + JSON.stringify(meta) : '');
-                        }
-                    })
-                ]
-            });
-            break;
-        case LogProvider.GoogleWinston:
-            this._logger = createLogger({
-                level: 'debug',
-                transports: [
-                    new LoggingWinston({
-                        prefix: PROJECT_ID
-                    })
-                ]
-            });
-            break;
-        case LogProvider.Winston:
-        default:
-            this._logger = createLogger({
-                level: 'debug',
-                transports: [
-                    new transports.Console({
-                        format: combine(
-                            colorize(),
-                            simple()
-                        )
-                    }),
-                    new transports.File({
-                        level: 'error',
-                        filename: process.cwd() + '/logs/error.log',
-                        maxsize: 10485760,
-                        maxFiles: 5,
-                        format: combine(
-                            simple()
-                        )
-                    })
-                ]
-            });
-            break;
+            case LogProvider.GoogleWinston:
+                this._logger = createLogger({
+                    level: 'debug',
+                    transports: [
+                        new LoggingWinston({
+                            prefix: PROJECT_ID
+                        })
+                    ]
+                });
+                break;
+            case LogProvider.Winston:
+            default:
+                this._logger = createLogger({
+                    level: 'debug',
+                    transports: [
+                        new transports.Console({
+                            format: combine(
+                                colorize(),
+                                simple()
+                            )
+                        }),
+                        new transports.File({
+                            level: 'error',
+                            filename: process.cwd() + '/logs/error.log',
+                            maxsize: 10485760,
+                            maxFiles: 5,
+                            format: combine(
+                                simple()
+                            )
+                        })
+                    ]
+                });
+                break;
         }
     }
 
-    info<T>(message: string, meta?: T, trace?: string): void {
-        this._logger.info(message, this._formatContent(meta, trace));
+    info(message: string, meta?: any, trace?: TraceRequest): void {
+        this._logger.info(message + this._formatContent(meta, trace));
     }
 
-    debug<T>(message: string, meta?: T, trace?: string): void {
-        this._logger.debug(message, this._formatContent(meta, trace));
+    debug(message: string, meta?: any, trace?: TraceRequest): void {
+        this._logger.debug(message + this._formatContent(meta, trace));
     }
 
-    warn<T>(message: string, meta?: T, trace?: string): void {
-        this._logger.warn(message, this._formatContent(meta, trace));
+    warn(message: string, meta?: any, trace?: TraceRequest): void {
+        this._logger.warn(message + this._formatContent(meta, trace));
     }
 
-    error<T>(message: string, meta?: T, trace?: string): void {
-        this._logger.error(message, this._formatContent(meta, trace));
+    error(message: string, meta?: any, trace?: TraceRequest): void {
+        this._logger.error(message + this._formatContent(meta, trace));
     }
 
-    private _formatContent(meta?: any, trace?: string): any {
-        let metadata: any;
+    private _formatContent(meta?: any, trace?: TraceRequest): string {
+        const contents: string[] = [];
         if (meta) {
             if (isLiteralObject(meta))
-                metadata = JSON.parse(JSON.stringify(meta, Object.getOwnPropertyNames(meta)));
+                contents.push(JSON.stringify(meta, Object.getOwnPropertyNames(meta)));
             else
-                metadata = { content: meta };
+                contents.push(JSON.stringify(meta));
         }
         if (trace) {
-            if (!metadata)
-                metadata = {};
-
             if (LOG_PROVIDER === LogProvider.GoogleWinston)
-                metadata[LoggingWinston.LOGGING_TRACE_KEY] = trace;
+                contents.push(`[${LoggingWinston.LOGGING_TRACE_KEY}: ${trace.id}]`);
             else
-                metadata.trace = trace;
+                contents.push(`[trace: ${trace.id}]`);
         }
 
-        return metadata;
+        if (contents.length)
+            return ' ' + contents.join(' ');
+        return '';
     }
 
     createMiddleware(): Handler {
@@ -124,7 +104,7 @@ export class LogService implements ILogService {
                 requestWhitelist: ['headers', 'query'], // these are not included in the standard StackDriver httpRequest
                 responseWhitelist: ['body'], // this populates the `res.body` so we can get the response size (not required)
                 ignoreRoute: function(req, _res) {
-                    if (req.path === '/health' || req.path.startsWith('/docs'))
+                    if (req.path === '/health')
                         return true;
                     return false;
                 },
@@ -134,9 +114,8 @@ export class LogService implements ILogService {
                     const httpRequest = {} as any;
                     const meta = {} as any;
                     if (req) {
-                        const reqExt = req as IRequest;
                         if (!meta[LoggingWinston.LOGGING_TRACE_KEY])
-                            meta[LoggingWinston.LOGGING_TRACE_KEY] = reqExt.trace.id;
+                            meta[LoggingWinston.LOGGING_TRACE_KEY] = req.trace.id;
 
                         meta.httpRequest = httpRequest;
                         httpRequest.requestMethod = req.method;
@@ -182,8 +161,6 @@ export class LogService implements ILogService {
                             responseSize = body.length;
                     }
 
-                    if (LOG_PROVIDER === LogProvider.AwsWinston)
-                        return `${remoteIp} ${req.method} ${res.statusCode} ${req.socket.bytesRead}B ${responseSize}B ${latencySeconds}s ${req.url} ${req.headers['user-agent']}`;
                     return `[${new Date().toISOString()}]: ${remoteIp} ${req.method} ${res.statusCode} ${req.socket.bytesRead}B ${responseSize}B ${latencySeconds}s ${req.url} ${req.headers['user-agent']}`;
                 },
                 metaField: null, // this causes the metadata to be stored at the root of the log entry
@@ -191,7 +168,7 @@ export class LogService implements ILogService {
                 requestWhitelist: ['headers', 'query'], // these are not included in the standard StackDriver httpRequest
                 responseWhitelist: ['body'], // this populates the `res.body` so we can get the response size (not required)
                 ignoreRoute: function(req, _res) {
-                    if (req.path === '/health' || req.path.startsWith('/docs'))
+                    if (req.path === '/health')
                         return true;
                     return false;
                 },
@@ -201,10 +178,9 @@ export class LogService implements ILogService {
         }
 
         return (req: Request, res: Response, next: NextFunction) => {
-            const reqExt = req as IRequest;
-            reqExt.logService = this;
-            reqExt.trace = new TraceRequest();
-            reqExt.trace.getFromHttpHeader(req.headers);
+            req.logService = this;
+            req.trace = new TraceRequest();
+            req.trace.getFromHttpHeader(req.headers);
 
             handler(req, res, next);
         };

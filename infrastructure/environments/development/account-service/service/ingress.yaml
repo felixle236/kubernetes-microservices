@@ -8,9 +8,9 @@ metadata:
     tier: gateway
   annotations:
     kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/auth-url: http://authentication-service.dev.svc.cluster.local/api/v1/auths
+    nginx.ingress.kubernetes.io/auth-url: http://authentication-service.dev.svc.cluster.local:3001/api/v1/auths
     nginx.ingress.kubernetes.io/auth-method: GET
-    nginx.ingress.kubernetes.io/auth-response-headers: Authorization, X-Trace, X-User-Id, X-Role-Id
+    nginx.ingress.kubernetes.io/auth-response-headers: Authorization, X-Trace, X-User-Id, X-Role-Id, X-Auth-Type
     nginx.ingress.kubernetes.io/auth-cache-key: $remote_user$http_authorization
     nginx.ingress.kubernetes.io/auth-cache-duration: 200 202 5m, 401 5s
     nginx.ingress.kubernetes.io/proxy-connect-timeout: 30s
@@ -32,3 +32,13 @@ spec:
             name: account-service
             port:
               number: 80
+  - host: account-doc-dev.review-site.xyz
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: account-service
+            port:
+              number: 4000

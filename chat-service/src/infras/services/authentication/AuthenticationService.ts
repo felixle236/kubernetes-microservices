@@ -1,39 +1,57 @@
-import { AUTH_PRIVATE_KEY, AUTH_URL } from '@configs/Configuration';
-import { IAuthenticationService, ICreateUserAuthRequest, IVerifyUserAuthResponse } from '@gateways/services/IAuthenticationService';
-import { DataResponse } from '@shared/usecase/DataResponse';
-import { HandleOption } from '@shared/usecase/HandleOption';
-import { handleAxiosResponseData, handleAxiosResponseError } from '@utils/api';
-import axios from 'axios';
-import { Service } from 'typedi';
+import { IncomingHttpHeaders } from 'http';
+import { IAuthenticationService, IVerifyUserAuthResponse } from 'application/interfaces/services/IAuthenticationService';
+import { ILogService } from 'application/interfaces/services/ILogService';
+import axios, { AxiosInstance } from 'axios';
+import { AUTH_INTERNAL_PRIVATE_KEY, AUTH_URL } from 'config/Configuration';
+import { HttpHeaderKey } from 'shared/types/Common';
+import { InjectService } from 'shared/types/Injection';
+import { DataResponse } from 'shared/usecase/DataResponse';
+import { UsecaseOption } from 'shared/usecase/UsecaseOption';
+import { Inject, Service } from 'typedi';
+import { handleAxiosResponseData, handleAxiosResponseError } from 'utils/Api';
 
-@Service('authentication.service')
+@Service(InjectService.Auth)
 export class AuthenticationService implements IAuthenticationService {
-    private readonly _axios = axios.create({
-        baseURL: AUTH_URL,
-        headers: {
-            'x-private-key': AUTH_PRIVATE_KEY
-        }
-    });
+    private readonly _axios: AxiosInstance;
 
-    async verifyUserAuth(token: string, handleOption: HandleOption): Promise<IVerifyUserAuthResponse> {
-        const headers = {
-            'x-private-key': ''
-        };
-        handleOption.trace.setToHttpHeader(headers);
-
-        const result: DataResponse<IVerifyUserAuthResponse> = await this._axios.get('/api/v1/auths?token=' + token, { headers })
-            .then(handleAxiosResponseData)
-            .catch(handleAxiosResponseError);
-        return result.data;
+    constructor(
+        @Inject(InjectService.Log) private readonly _logService: ILogService
+    ) {
+        this._axios = axios.create({
+            baseURL: AUTH_URL,
+            headers: {
+                [HttpHeaderKey.PrivateKey]: AUTH_INTERNAL_PRIVATE_KEY
+            }
+        });
     }
 
-    async createUserAuth(data: ICreateUserAuthRequest, handleOption: HandleOption): Promise<boolean> {
-        const headers = {};
-        handleOption.trace.setToHttpHeader(headers);
+    private _customHeaders(headers: IncomingHttpHeaders, usecaseOption: UsecaseOption): IncomingHttpHeaders {
+        usecaseOption.trace.setToHttpHeader(headers);
 
-        const res: DataResponse<string> = await this._axios.post('/api/v1/auths', data, { headers })
-            .then(handleAxiosResponseData)
-            .catch(handleAxiosResponseError);
-        return !!res.data;
+        if (usecaseOption.userAuth) {
+            headers[HttpHeaderKey.UserId] = usecaseOption.userAuth.userId;
+            headers[HttpHeaderKey.RoleId] = usecaseOption.userAuth.roleId;
+            headers[HttpHeaderKey.AuthType] = usecaseOption.userAuth.type;
+        }
+        return headers;
+    }
+
+    getTokenFromHeader(headers: IncomingHttpHeaders): string {
+        let token = '';
+        if (headers.authorization) {
+            const parts = headers.authorization.split(' ');
+            token = parts.length === 2 && parts[0] === 'Bearer' ? parts[1] : '';
+        }
+        return token;
+    }
+
+    async verifyUserAuth(token: string, usecaseOption: UsecaseOption): Promise<IVerifyUserAuthResponse> {
+        const headers = { authorization: 'Bearer ' + token };
+        this._customHeaders(headers, usecaseOption);
+
+        const result: DataResponse<IVerifyUserAuthResponse> = await this._axios.get('/api/v1/auths', { headers })
+            .then(res => handleAxiosResponseData(this._logService, usecaseOption.trace, res))
+            .catch(error => handleAxiosResponseError(this._logService, usecaseOption.trace, error));
+        return result.data;
     }
 }

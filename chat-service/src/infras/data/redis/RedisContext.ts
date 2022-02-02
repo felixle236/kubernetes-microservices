@@ -1,24 +1,26 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
-import { DB_CACHING_HOST, DB_CACHING_PASSWORD, DB_CACHING_PORT, DB_CACHING_PREFIX } from '@configs/Configuration';
-import { IRedisClient } from '@shared/database/interfaces/IRedisClient';
-import { IRedisContext } from '@shared/database/interfaces/IRedisContext';
-import { MessageError } from '@shared/exceptions/message/MessageError';
-import { SystemError } from '@shared/exceptions/SystemError';
+import { DB_CACHING_HOST, DB_CACHING_PASSWORD, DB_CACHING_PORT, DB_CACHING_PREFIX } from 'config/Configuration';
 import redis from 'redis';
-import redisCommands from 'redis-commands';
+import rediss from 'redis-commands';
+import { IRedisClient } from 'shared/database/interfaces/IRedisClient';
+import { IRedisContext } from 'shared/database/interfaces/IRedisContext';
+import { LogicalError } from 'shared/exceptions/LogicalError';
+import { MessageError } from 'shared/exceptions/message/MessageError';
+import { InjectDb } from 'shared/types/Injection';
 import { Service } from 'typedi';
 
-@Service('redis.context')
+@Service(InjectDb.RedisContext)
 export class RedisContext implements IRedisContext {
-    private _connection: IRedisClient;
+    private _connection?: IRedisClient;
 
     constructor(connection?: IRedisClient) {
-        if (connection) this._connection = connection;
+        if (connection)
+            this._connection = connection;
     }
 
     get redisClient(): IRedisClient {
         if (!this._connection)
-            throw new SystemError(MessageError.PARAM_NOT_EXISTS, 'redis connection');
+            throw new LogicalError(MessageError.PARAM_NOT_EXISTS, { t: 'redis_connection' });
         return this._connection;
     }
 
@@ -63,8 +65,8 @@ const promisifyRedis = (redis) => {
         };
     };
 
-    redisCommands.list.forEach(function(fullCommand) {
-        const cmd = fullCommand.split(' ')[0];
+    rediss.list.forEach(function(full) {
+        const cmd = full.split(' ')[0];
 
         if (cmd !== 'multi') {
             clproto[cmd + 'Async'] = promisify(clproto[cmd]);
@@ -82,9 +84,8 @@ const promisifyRedis = (redis) => {
 
 const createCb = (resolve, reject) => {
     return function(err, value) {
-        if (err !== null)
+        if (err)
             reject(err);
-
         else
             resolve(value);
     };

@@ -15,15 +15,13 @@ module.exports = {
     extends: [
         'standard',
         'eslint:recommended'
-        // 'plugin:security/recommended'
     ],
     plugins: [
-        // 'security',
         'import',
         'node'
     ],
     rules: {
-        indent: ['error', 4],
+        indent: ['error', 4, { SwitchCase: 1 }],
         semi: ['error', 'always'],
         'no-var': ['error'],
         'one-var': ['error', 'never'],
@@ -41,18 +39,12 @@ module.exports = {
             named: 'never',
             asyncArrow: 'always'
         }],
-        'sort-imports': ['error', {
-            ignoreCase: true,
-            ignoreMemberSort: false,
-            ignoreDeclarationSort: true,
-            memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single']
-        }],
         'import/order': [
             'error',
             {
                 'newlines-between': 'never',
                 alphabetize: { order: 'asc', caseInsensitive: true },
-                groups: ['builtin', 'external', 'internal', 'index', 'sibling', 'parent', 'object']
+                groups: ['builtin', 'external', 'internal', 'index', 'sibling', 'parent', 'object', 'type']
             }
         ],
         'no-console': 'error',
@@ -88,7 +80,7 @@ module.exports = {
             '@typescript-eslint/no-unused-vars': ['error', { args: 'none' }],
             '@typescript-eslint/no-empty-interface': 'off',
             '@typescript-eslint/no-use-before-define': 'error',
-            '@typescript-eslint/no-namespace': 'warn',
+            '@typescript-eslint/no-namespace': 'off',
             '@typescript-eslint/naming-convention': [
                 'error',
                 {

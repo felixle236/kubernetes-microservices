@@ -12,14 +12,13 @@
         "**/.git": true
     },
     "editor.tabSize": 4,
+    "editor.hover.delay": 1200,
     "eslint.options": {
         "extensions": [
             ".html",
             ".js",
             ".ts",
-            ".json",
-            ".css",
-            ".scss"
+            ".json"
         ]
     },
     "eslint.format.enable": true,

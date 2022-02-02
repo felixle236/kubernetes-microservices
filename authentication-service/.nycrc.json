@@ -11,7 +11,10 @@
         "src/**/*.ts"
     ],
     "exclude": [
-        "**/test/**"
+        "**/shared/**",
+        "**/entities/**",
+        "**/middlewares/**",
+        "**/DbContext.ts"
     ],
     "extension": [
         ".ts"

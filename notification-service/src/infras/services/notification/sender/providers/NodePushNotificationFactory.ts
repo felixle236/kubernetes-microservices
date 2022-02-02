@@ -1,6 +1,6 @@
-import { APN_KEY, ENVIRONMENT, FCM_KEY, PROJECT_NAME } from '@configs/Configuration';
-import { Environment } from '@configs/Enums';
+import { APN_KEY, ENVIRONMENT, FCM_KEY, PROJECT_NAME } from 'config/Configuration';
 import NodePushNotification from 'node-pushnotifications';
+import { Environment } from 'shared/types/Environment';
 import { INotificationProvider } from '../interfaces/INotificationProvider';
 
 export class NodePushNotificationFactory implements INotificationProvider {
@@ -22,13 +22,14 @@ export class NodePushNotificationFactory implements INotificationProvider {
         });
     }
 
-    async send(deviceIds: string[], title: string, content: string): Promise<any> {
-        return await this._sender.send(deviceIds, {
+    async send<T>(deviceTokens: string[], title: string, content: string, meta = {} as T): Promise<any> {
+        return await this._sender.send(deviceTokens, {
             title, // REQUIRED for Android
             topic: title, // REQUIRED for iOS (apn and gcm)
             body: content,
             custom: {
-                sender: PROJECT_NAME
+                sender: PROJECT_NAME,
+                ...meta
             },
             sound: 'ping.aiff'
         });

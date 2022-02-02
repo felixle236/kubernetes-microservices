@@ -14,3 +14,11 @@ spec:
       port: 80
       targetPort: 3000
       protocol: TCP
+    - name: authentication-internal-port
+      port: 3001
+      targetPort: 3001
+      protocol: TCP
+    - name: authentication-apidoc-port
+      port: 4000
+      targetPort: 4000
+      protocol: TCP

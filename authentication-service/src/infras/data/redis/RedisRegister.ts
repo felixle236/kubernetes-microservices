@@ -1,16 +1,6 @@
 import './RedisContext';
 import path from 'path';
-import { getDirectoriesSync, getFilesSync } from '@utils/file';
+import { searchFilesSync } from 'utils/File';
 
-const folder = path.join(__dirname, './repositories');
-getFilesSync(folder).forEach(file => {
-    if (!file.includes('.spec'))
-        require(`${folder}/${file}`);
-});
-
-getDirectoriesSync(folder).forEach(childFolder => {
-    getFilesSync(`${folder}/${childFolder}`).forEach(file => {
-        if (!file.includes('.spec'))
-            require(`${folder}/${childFolder}/${file}`);
-    });
-});
+const files = searchFilesSync(path.join(__dirname, './repositories/**/*Repository{.js,.ts}'));
+files.forEach(file => require(file));

@@ -1,21 +1,24 @@
-import { DOMAIN, PRODUCT_NAME, PROTOTYPE } from '@configs/Configuration';
+import { PROJECT_DOMAIN, PROJECT_NAME, PROJECT_PROTOTYPE } from 'config/Configuration';
 import Mailgen from 'mailgen';
+import { i18n } from 'shared/localization/Localization';
 
 export class UserActivationTemplate {
-    static getTemplate(name: string, email: string, activeKey: string): Mailgen.Content {
+    static getTemplate(param: { name: string, email: string, activeKey: string, locale?: string }): Mailgen.Content {
         return {
             body: {
-                name,
-                intro: `Welcome to ${PRODUCT_NAME}! We're very excited to have you on board.`,
+                greeting: i18n.__({ phrase: 'mail.account_activation.greeting', locale: param.locale }),
+                name: param.name,
+                intro: i18n.__({ phrase: 'mail.account_activation.intro', locale: param.locale }, { projectName: PROJECT_NAME }),
                 action: {
-                    instructions: `To get started with ${PRODUCT_NAME}, please click here:`,
+                    instructions: i18n.__({ phrase: 'mail.account_activation.instructions', locale: param.locale }, { projectName: PROJECT_NAME }),
                     button: {
                         color: '#22BC66',
-                        text: 'Confirm your account',
-                        link: `${PROTOTYPE}://${DOMAIN}/confirm-account?email=${email}&key=${activeKey}`
+                        text: i18n.__({ phrase: 'mail.account_activation.button', locale: param.locale }),
+                        link: `${PROJECT_PROTOTYPE}://${PROJECT_DOMAIN}/confirm-account?email=${param.email}&key=${param.activeKey}`
                     }
                 },
-                outro: 'Need help, or have questions? Just reply to this email, we\'d love to help.'
+                outro: i18n.__({ phrase: 'mail.account_activation.outro', locale: param.locale }),
+                signature: i18n.__({ phrase: 'mail.account_activation.signature', locale: param.locale })
             }
         };
     }

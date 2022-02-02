@@ -1,11 +1,12 @@
+import { AuthType } from 'domain/enums/AuthType';
 import { IncomingHttpHeaders } from 'http';
-import { AUTH_SECRET_OR_PRIVATE_KEY, AUTH_SECRET_OR_PUBLIC_KEY, AUTH_SIGNATURE, DOMAIN, PROJECT_NAME, PROTOTYPE } from '@configs/Configuration';
-import { AuthType } from '@domain/enums/auth/AuthType';
-import { IAuthJwtService, IJwtPayloadExtend } from '@gateways/services/IAuthJwtService';
+import { IAuthJwtService, IJwtPayloadExtend } from 'application/interfaces/services/IAuthJwtService';
+import { AUTH_SECRET_OR_PRIVATE_KEY, AUTH_SECRET_OR_PUBLIC_KEY, AUTH_SIGNATURE, PROJECT_DOMAIN, PROJECT_NAME, PROJECT_PROTOTYPE } from 'config/Configuration';
 import jwt from 'jsonwebtoken';
+import { InjectService } from 'shared/types/Injection';
 import { Service } from 'typedi';
 
-@Service('auth_jwt.service')
+@Service(InjectService.AuthJwt)
 export class AuthJwtService implements IAuthJwtService {
     getTokenFromHeader(headers: IncomingHttpHeaders): string {
         let token = '';
@@ -18,13 +19,14 @@ export class AuthJwtService implements IAuthJwtService {
 
     sign(userId: string, roleId: string, type: AuthType): string {
         return jwt.sign({
+            userId,
             roleId,
             type
         }, AUTH_SECRET_OR_PRIVATE_KEY, {
-            subject: userId,
+            subject: 'user_auth',
             expiresIn: 24 * 60 * 60,
             issuer: PROJECT_NAME,
-            audience: `${PROTOTYPE}://${DOMAIN}`,
+            audience: `${PROJECT_PROTOTYPE}://${PROJECT_DOMAIN}`,
             algorithm: AUTH_SIGNATURE
         } as jwt.SignOptions);
     }
@@ -32,7 +34,7 @@ export class AuthJwtService implements IAuthJwtService {
     verify(token: string): IJwtPayloadExtend {
         return jwt.verify(token, AUTH_SECRET_OR_PUBLIC_KEY, {
             issuer: PROJECT_NAME,
-            audience: `${PROTOTYPE}://${DOMAIN}`,
+            audience: `${PROJECT_PROTOTYPE}://${PROJECT_DOMAIN}`,
             algorithm: AUTH_SIGNATURE
         } as jwt.VerifyOptions) as IJwtPayloadExtend;
     }
